@@ -1,5 +1,6 @@
 {
   "name": "Functional Programming",
+  "isUpcomingChange": false,
   "dashedName": "functional-programming",
   "order": 8,
   "time": "5 hours",
@@ -104,7 +105,4 @@
       "587d7dab367417b2b2512b70",
       "Introduction to Currying and Partial Application"
     ]
-  ],
-  "helpRoom": "Help",
-  "fileName": "02-javascript-algorithms-and-data-structures/functional-programming.json"
-}
+  ]}

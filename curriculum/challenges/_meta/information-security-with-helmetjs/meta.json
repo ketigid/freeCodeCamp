@@ -1,12 +1,13 @@
 {
   "name": "Information Security with HelmetJS",
+  "isUpcomingChange": false,
   "dashedName": "information-security-with-helmetjs",
   "order": 1,
   "time": "5 hours",
   "template": "",
   "required": [],
-  "superBlock": "information-security-and-quality-assurance",
-  "superOrder": 6,
+  "superBlock": "information-security",
+  "superOrder": 10,
   "challengeOrder": [
     [
       "587d8247367417b2b2512c36",
@@ -64,7 +65,4 @@
       "58a25bcff9fc0f352b528e7e",
       "Hash and Compare Passwords Synchronously"
     ]
-  ],
-  "helpRoom": "HelpBackend",
-  "fileName": "06-information-security-and-quality-assurance/helmetjs.json"
-}
+  ]}

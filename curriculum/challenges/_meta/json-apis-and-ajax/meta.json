@@ -1,5 +1,6 @@
 {
   "name": "JSON APIs and AJAX",
+  "isUpcomingChange": false,
   "dashedName": "json-apis-and-ajax",
   "order": 2,
   "time": "2 hours",
@@ -52,7 +53,4 @@
       "587d7faf367417b2b2512be9",
       "Post Data with the JavaScript XMLHttpRequest Method"
     ]
-  ],
-  "helpRoom": "Help",
-  "fileName": "04-data-visualization/json-apis-and-ajax.json"
-}
+  ]}

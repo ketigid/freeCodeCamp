@@ -1,16 +1,24 @@
-import { transformers } from '../rechallenge/transformers';
+// the config files are created during the build, but not before linting
+// eslint-disable-next-line import/no-unresolved
+import frameRunnerData from '../../../../../config/client/frame-runner.json';
+// eslint-disable-next-line import/no-unresolved
+import testEvaluatorData from '../../../../../config/client/test-evaluator.json';
+import { challengeTypes } from '../../../../utils/challenge-types';
 import { cssToHtml, jsToHtml, concatHtml } from '../rechallenge/builders.js';
-import { challengeTypes } from '../../../../utils/challengeTypes';
-import createWorker from './worker-executor';
+import { getTransformers } from '../rechallenge/transformers';
 import {
   createTestFramer,
   runTestInTestFrame,
   createMainFramer
 } from './frame';
+import createWorker from './worker-executor';
+
+const { filename: runner } = frameRunnerData;
+const { filename: testEvaluator } = testEvaluatorData;
 
 const frameRunner = [
   {
-    src: '/js/frame-runner.js'
+    src: `/js/${runner}.js`
   }
 ];
 
@@ -23,7 +31,7 @@ const globalRequires = [
 ];
 
 const applyFunction = fn =>
-  async function(file) {
+  async function (file) {
     try {
       if (file.error) {
         return file;
@@ -41,19 +49,34 @@ const applyFunction = fn =>
 const composeFunctions = (...fns) =>
   fns.map(applyFunction).reduce((f, g) => x => f(x).then(g));
 
-function buildSourceMap(files) {
-  return files.reduce((sources, file) => {
-    sources[file.name] = file.source || file.contents;
-    return sources;
-  }, {});
+function buildSourceMap(challengeFiles) {
+  // TODO: concatenating the source/contents is a quick hack for multi-file
+  // editing. It is used because all the files (js, html and css) end up with
+  // the same name 'index'. This made the last file the only file to  appear in
+  // sources.
+  // A better solution is to store and handle them separately. Perhaps never
+  // setting the name to 'index'. Use 'contents' instead?
+  // TODO: is file.source ever defined?
+  const source = challengeFiles.reduce(
+    (sources, challengeFile) => {
+      sources[challengeFile.name] +=
+        challengeFile.source || challengeFile.contents;
+      sources.editableContents += challengeFile.editableContents || '';
+      return sources;
+    },
+    { index: '', editableContents: '' }
+  );
+  return source;
 }
 
-function checkFilesErrors(files) {
-  const errors = files.filter(({ error }) => error).map(({ error }) => error);
+function checkFilesErrors(challengeFiles) {
+  const errors = challengeFiles
+    .filter(({ error }) => error)
+    .map(({ error }) => error);
   if (errors.length) {
     throw errors;
   }
-  return files;
+  return challengeFiles;
 }
 
 const buildFunctions = {
@@ -62,14 +85,20 @@ const buildFunctions = {
   [challengeTypes.html]: buildDOMChallenge,
   [challengeTypes.modern]: buildDOMChallenge,
   [challengeTypes.backend]: buildBackendChallenge,
-  [challengeTypes.backEndProject]: buildBackendChallenge
+  [challengeTypes.backEndProject]: buildBackendChallenge,
+  [challengeTypes.pythonProject]: buildBackendChallenge
 };
 
-export async function buildChallenge(challengeData) {
+export function canBuildChallenge(challengeData) {
+  const { challengeType } = challengeData;
+  return buildFunctions.hasOwnProperty(challengeType);
+}
+
+export async function buildChallenge(challengeData, options) {
   const { challengeType } = challengeData;
   let build = buildFunctions[challengeType];
   if (build) {
-    return build(challengeData);
+    return build(challengeData, options);
   }
   throw new Error(`Cannot build challenge of type ${challengeType}`);
 }
@@ -77,30 +106,37 @@ export async function buildChallenge(challengeData) {
 const testRunners = {
   [challengeTypes.js]: getJSTestRunner,
   [challengeTypes.html]: getDOMTestRunner,
-  [challengeTypes.backend]: getDOMTestRunner
+  [challengeTypes.backend]: getDOMTestRunner,
+  [challengeTypes.pythonProject]: getDOMTestRunner
 };
-export function getTestRunner(buildData, proxyLogger, document) {
+export function getTestRunner(buildData, runnerConfig, document) {
   const { challengeType } = buildData;
   const testRunner = testRunners[challengeType];
   if (testRunner) {
-    return testRunner(buildData, proxyLogger, document);
+    return testRunner(buildData, runnerConfig, document);
   }
   throw new Error(`Cannot get test runner for challenge type ${challengeType}`);
 }
 
-function getJSTestRunner({ build, sources }, proxyLogger) {
-  const code = sources && 'index' in sources ? sources['index'] : '';
+function getJSTestRunner({ build, sources }, { proxyLogger, removeComments }) {
+  const code = {
+    contents: sources.index,
+    editableContents: sources.editableContents
+  };
 
-  const testWorker = createWorker('test-evaluator', { terminateWorker: true });
+  const testWorker = createWorker(testEvaluator, { terminateWorker: true });
 
-  return (testString, testTimeout) => {
+  return (testString, testTimeout, firstTest = true) => {
     return testWorker
-      .execute({ build, testString, code, sources }, testTimeout)
+      .execute(
+        { build, testString, code, sources, firstTest, removeComments },
+        testTimeout
+      )
       .on('LOG', proxyLogger).done;
   };
 }
 
-async function getDOMTestRunner(buildData, proxyLogger, document) {
+async function getDOMTestRunner(buildData, { proxyLogger }, document) {
   await new Promise(resolve =>
     createTestFramer(document, resolve, proxyLogger)(buildData)
   );
@@ -108,40 +144,48 @@ async function getDOMTestRunner(buildData, proxyLogger, document) {
     runTestInTestFrame(document, testString, testTimeout);
 }
 
-export function buildDOMChallenge({ files, required = [], template = '' }) {
+export function buildDOMChallenge({
+  challengeFiles,
+  required = [],
+  template = ''
+}) {
   const finalRequires = [...globalRequires, ...required, ...frameRunner];
-  const loadEnzyme = Object.keys(files).some(key => files[key].ext === 'jsx');
+  const loadEnzyme = challengeFiles.some(
+    challengeFile => challengeFile.ext === 'jsx'
+  );
   const toHtml = [jsToHtml, cssToHtml];
-  const pipeLine = composeFunctions(...transformers, ...toHtml);
-  const finalFiles = Object.keys(files)
-    .map(key => files[key])
-    .map(pipeLine);
+  const pipeLine = composeFunctions(...getTransformers(), ...toHtml);
+  const finalFiles = challengeFiles.map(pipeLine);
   return Promise.all(finalFiles)
     .then(checkFilesErrors)
-    .then(files => ({
+    .then(challengeFiles => ({
       challengeType: challengeTypes.html,
-      build: concatHtml({ required: finalRequires, template, files }),
-      sources: buildSourceMap(files),
+      build: concatHtml({ required: finalRequires, template, challengeFiles }),
+      sources: buildSourceMap(challengeFiles),
       loadEnzyme
     }));
 }
 
-export function buildJSChallenge({ files }) {
-  const pipeLine = composeFunctions(...transformers);
-  const finalFiles = Object.keys(files)
-    .map(key => files[key])
-    .map(pipeLine);
+export function buildJSChallenge({ challengeFiles }, options) {
+  const pipeLine = composeFunctions(...getTransformers(options));
+
+  const finalFiles = challengeFiles.map(pipeLine);
   return Promise.all(finalFiles)
     .then(checkFilesErrors)
-    .then(files => ({
+    .then(challengeFiles => ({
       challengeType: challengeTypes.js,
-      build: files
+      build: challengeFiles
         .reduce(
-          (body, file) => [...body, file.head, file.contents, file.tail],
+          (body, challengeFile) => [
+            ...body,
+            challengeFile.head,
+            challengeFile.contents,
+            challengeFile.tail
+          ],
           []
         )
         .join('\n'),
-      sources: buildSourceMap(files)
+      sources: buildSourceMap(challengeFiles)
     }));
 }
 
@@ -153,10 +197,13 @@ export function buildBackendChallenge({ url }) {
   };
 }
 
-export function updatePreview(buildData, document) {
+export async function updatePreview(buildData, document, proxyLogger) {
   const { challengeType } = buildData;
+
   if (challengeType === challengeTypes.html) {
-    createMainFramer(document)(buildData);
+    await new Promise(resolve =>
+      createMainFramer(document, resolve, proxyLogger)(buildData)
+    );
   } else {
     throw new Error(`Cannot show preview for challenge type ${challengeType}`);
   }
@@ -167,4 +214,15 @@ export function challengeHasPreview({ challengeType }) {
     challengeType === challengeTypes.html ||
     challengeType === challengeTypes.modern
   );
+}
+
+export function isJavaScriptChallenge({ challengeType }) {
+  return (
+    challengeType === challengeTypes.js ||
+    challengeType === challengeTypes.bonfire
+  );
+}
+
+export function isLoopProtected(challengeMeta) {
+  return challengeMeta.superBlock !== 'Coding Interview Prep';
 }

@@ -1,5 +1,6 @@
 {
   "name": "Regular Expressions",
+  "isUpcomingChange": false,
   "dashedName": "regular-expressions",
   "order": 3,
   "time": "5 hours",
@@ -140,7 +141,4 @@
       "587d7dbb367417b2b2512bac",
       "Remove Whitespace from Start and End"
     ]
-  ],
-  "helpRoom": "Help",
-  "fileName": "02-javascript-algorithms-and-data-structures/regular-expressions.json"
-}
+  ]}

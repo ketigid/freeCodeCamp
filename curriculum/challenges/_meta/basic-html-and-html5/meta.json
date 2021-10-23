@@ -1,5 +1,6 @@
 {
   "name": "Basic HTML and HTML5",
+  "isUpcomingChange": false,
   "dashedName": "basic-html-and-html5",
   "order": 0,
   "time": "5 hours",
@@ -120,7 +121,4 @@
       "587d78aa367417b2b2512aec",
       "Define the Head and Body of an HTML Document"
     ]
-  ],
-  "helpRoom": "Help",
-  "fileName": "01-responsive-web-design/basic-html-and-html5.json"
-}
+  ]}

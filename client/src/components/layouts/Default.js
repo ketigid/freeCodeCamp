@@ -1,39 +1,39 @@
-import React, { Fragment, Component } from 'react';
+import fontawesome from '@fortawesome/fontawesome';
 import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Helmet from 'react-helmet';
+import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { createSelector } from 'reselect';
-import Helmet from 'react-helmet';
-import fontawesome from '@fortawesome/fontawesome';
 
-import ga from '../../analytics';
+import latoBoldURL from '../../../static/fonts/lato/Lato-Bold.woff';
+import latoLightURL from '../../../static/fonts/lato/Lato-Light.woff';
+import latoRegularURL from '../../../static/fonts/lato/Lato-Regular.woff';
+import robotoBoldURL from '../../../static/fonts/roboto-mono/RobotoMono-Bold.woff';
+import robotoItalicURL from '../../../static/fonts/roboto-mono/RobotoMono-Italic.woff';
+import robotoRegularURL from '../../../static/fonts/roboto-mono/RobotoMono-Regular.woff';
+import { isBrowser } from '../../../utils';
 import {
   fetchUser,
   isSignedInSelector,
   onlineStatusChange,
+  serverStatusChange,
   isOnlineSelector,
-  userSelector
+  isServerOnlineSelector,
+  userFetchStateSelector,
+  userSelector,
+  usernameSelector,
+  executeGA
 } from '../../redux';
+import Flash from '../Flash';
 import { flashMessageSelector, removeFlashMessage } from '../Flash/redux';
 
-import { isBrowser } from '../../../utils';
-
-import WithInstantSearch from '../search/WithInstantSearch';
-import OfflineWarning from '../OfflineWarning';
-import Flash from '../Flash';
-import Header from '../Header';
 import Footer from '../Footer';
-// preload common fonts
-import latoLightURL from '../../../static/fonts/lato/Lato-Light.woff';
-import latoRegularURL from '../../../static/fonts/lato/Lato-Regular.woff';
-import latoBoldURL from '../../../static/fonts/lato/Lato-Bold.woff';
-// eslint-disable-next-line max-len
-import robotoRegularURL from '../../../static/fonts/roboto-mono/RobotoMono-Regular.woff';
-// eslint-disable-next-line max-len
-import robotoBoldURL from '../../../static/fonts/roboto-mono/RobotoMono-Bold.woff';
-// eslint-disable-next-line max-len
-import robotoItalicURL from '../../../static/fonts/roboto-mono/RobotoMono-Italic.woff';
+import Header from '../Header';
+import OfflineWarning from '../OfflineWarning';
 
+// preload common fonts
 import './fonts.css';
 import './global.css';
 import './variables.css';
@@ -42,32 +42,10 @@ fontawesome.config = {
   autoAddCss: false
 };
 
-const metaKeywords = [
-  'javascript',
-  'js',
-  'website',
-  'web',
-  'development',
-  'free',
-  'code',
-  'camp',
-  'course',
-  'courses',
-  'html',
-  'css',
-  'react',
-  'redux',
-  'api',
-  'front',
-  'back',
-  'end',
-  'learn',
-  'tutorial',
-  'programming'
-];
-
 const propTypes = {
   children: PropTypes.node.isRequired,
+  executeGA: PropTypes.func,
+  fetchState: PropTypes.shape({ pending: PropTypes.bool }),
   fetchUser: PropTypes.func.isRequired,
   flashMessage: PropTypes.shape({
     id: PropTypes.string,
@@ -76,50 +54,69 @@ const propTypes = {
   }),
   hasMessage: PropTypes.bool,
   isOnline: PropTypes.bool.isRequired,
+  isServerOnline: PropTypes.bool.isRequired,
   isSignedIn: PropTypes.bool,
   onlineStatusChange: PropTypes.func.isRequired,
   pathname: PropTypes.string.isRequired,
   removeFlashMessage: PropTypes.func.isRequired,
+  serverStatusChange: PropTypes.func.isRequired,
   showFooter: PropTypes.bool,
-  theme: PropTypes.string
+  signedInUserName: PropTypes.string,
+  t: PropTypes.func.isRequired,
+  theme: PropTypes.string,
+  useTheme: PropTypes.bool,
+  user: PropTypes.object
 };
 
 const mapStateToProps = createSelector(
   isSignedInSelector,
   flashMessageSelector,
   isOnlineSelector,
+  isServerOnlineSelector,
+  userFetchStateSelector,
   userSelector,
-  (isSignedIn, flashMessage, isOnline, user) => ({
+  usernameSelector,
+  (isSignedIn, flashMessage, isOnline, isServerOnline, fetchState, user) => ({
     isSignedIn,
     flashMessage,
     hasMessage: !!flashMessage.message,
     isOnline,
-    theme: user.theme
+    isServerOnline,
+    fetchState,
+    theme: user.theme,
+    user
   })
 );
+
 const mapDispatchToProps = dispatch =>
   bindActionCreators(
-    { fetchUser, removeFlashMessage, onlineStatusChange },
+    {
+      fetchUser,
+      removeFlashMessage,
+      onlineStatusChange,
+      serverStatusChange,
+      executeGA
+    },
     dispatch
   );
 
 class DefaultLayout extends Component {
   componentDidMount() {
-    const { isSignedIn, fetchUser, pathname } = this.props;
+    const { isSignedIn, fetchUser, pathname, executeGA } = this.props;
     if (!isSignedIn) {
       fetchUser();
     }
-    ga.pageview(pathname);
+    executeGA({ type: 'page', data: pathname });
 
     window.addEventListener('online', this.updateOnlineStatus);
     window.addEventListener('offline', this.updateOnlineStatus);
   }
 
   componentDidUpdate(prevProps) {
-    const { pathname } = this.props;
+    const { pathname, executeGA } = this.props;
     const { pathname: prevPathname } = prevProps;
     if (pathname !== prevPathname) {
-      ga.pageview(pathname);
+      executeGA({ type: 'page', data: pathname });
     }
   }
 
@@ -139,27 +136,33 @@ class DefaultLayout extends Component {
     const {
       children,
       hasMessage,
+      fetchState,
       flashMessage,
       isOnline,
+      isServerOnline,
       isSignedIn,
       removeFlashMessage,
       showFooter = true,
-      theme = 'default'
+      t,
+      theme = 'default',
+      user,
+      useTheme = true
     } = this.props;
+
     return (
-      <Fragment>
+      <div className='page-wrapper'>
         <Helmet
           bodyAttributes={{
-            class: `${theme === 'default' ? 'light-palette' : 'dark-palette'}`
+            class: useTheme
+              ? `${theme === 'default' ? 'light-palette' : 'dark-palette'}`
+              : 'light-palette'
           }}
           meta={[
             {
               name: 'description',
-              content:
-                'Learn to code with free online courses, programming ' +
-                'projects, and interview preparation for developer jobs.'
+              content: t('metaTags:description')
             },
-            { name: 'keywords', content: metaKeywords.join(', ') }
+            { name: 'keywords', content: t('metaTags:keywords') }
           ]}
         >
           <link
@@ -206,18 +209,23 @@ class DefaultLayout extends Component {
           />
           <style>{fontawesome.dom.css()}</style>
         </Helmet>
-        <WithInstantSearch>
-          <Header />
-          <div className={`default-layout`}>
-            <OfflineWarning isOnline={isOnline} isSignedIn={isSignedIn} />
-            {hasMessage && flashMessage ? (
-              <Flash flashMessage={flashMessage} onClose={removeFlashMessage} />
-            ) : null}
-            {children}
-            {showFooter && <Footer />}
-          </div>
-        </WithInstantSearch>
-      </Fragment>
+        <div className={`default-layout`}>
+          <Header fetchState={fetchState} user={user} />
+          <OfflineWarning
+            isOnline={isOnline}
+            isServerOnline={isServerOnline}
+            isSignedIn={isSignedIn}
+          />
+          {hasMessage && flashMessage ? (
+            <Flash
+              flashMessage={flashMessage}
+              removeFlashMessage={removeFlashMessage}
+            />
+          ) : null}
+          {children}
+        </div>
+        {showFooter && <Footer />}
+      </div>
     );
   }
 }
@@ -228,4 +236,4 @@ DefaultLayout.propTypes = propTypes;
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(DefaultLayout);
+)(withTranslation()(DefaultLayout));

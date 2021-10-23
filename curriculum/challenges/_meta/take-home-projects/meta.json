@@ -1,12 +1,13 @@
 {
   "name": "Take Home Projects",
+  "isUpcomingChange": false,
   "dashedName": "take-home-projects",
   "order": 4,
   "time": "",
   "template": "",
   "required": [],
   "superBlock": "coding-interview-prep",
-  "superOrder": 8,
+  "superOrder": 12,
   "challengeOrder": [
     [
       "bd7158d8c442eddfaeb5bd10",
@@ -88,7 +89,4 @@
       "5a5d02bd919fcf9ca8cf46cb",
       "Build a Light-Bright App"
     ]
-  ],
-  "helpRoom": "HelpFrontEnd",
-  "fileName": "08-coding-interview-prep/take-home-projects.json"
-}
+  ]}

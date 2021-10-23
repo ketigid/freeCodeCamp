@@ -1,12 +1,13 @@
 {
   "name": "Algorithms",
+  "isUpcomingChange": false,
   "dashedName": "algorithms",
   "order": 1,
   "time": "",
   "template": "",
   "required": [],
   "superBlock": "coding-interview-prep",
-  "superOrder": 8,
+  "superOrder": 12,
   "challengeOrder": [
     [
       "a3f503de51cf954ede28891d",
@@ -44,7 +45,4 @@
       "587d825c367417b2b2512c8f",
       "Implement Merge Sort"
     ]
-  ],
-  "helpRoom": "HelpJavaScript",
-  "fileName": "08-coding-interview-prep/algorithms.json"
-}
+  ]}

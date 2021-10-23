@@ -1,5 +1,6 @@
 {
   "name": "Debugging",
+  "isUpcomingChange": false,
   "dashedName": "debugging",
   "order": 4,
   "time": "1 hour",
@@ -56,7 +57,4 @@
       "587d7b86367417b2b2512b3d",
       "Prevent Infinite Loops with a Valid Terminal Condition"
     ]
-  ],
-  "helpRoom": "Help",
-  "fileName": "02-javascript-algorithms-and-data-structures/debugging.json"
-}
+  ]}

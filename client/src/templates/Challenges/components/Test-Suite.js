@@ -1,9 +1,9 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 
-import GreenPass from '../../../assets/icons/GreenPass';
-import Fail from '../../../assets/icons/Fail';
-import Initial from '../../../assets/icons/Initial';
+import Fail from '../../../assets/icons/fail';
+import GreenPass from '../../../assets/icons/green-pass';
+import Initial from '../../../assets/icons/initial';
 
 import './test-suite.css';
 
@@ -37,7 +37,6 @@ function TestSuite({ tests }) {
             aria-label={getAccessibleText(err, pass, text)}
             className='test-result'
             key={text.slice(-6) + index}
-            tabIndex='0'
           >
             <div className='test-status-icon'>
               {isInitial ? <Initial /> : statusIcon}

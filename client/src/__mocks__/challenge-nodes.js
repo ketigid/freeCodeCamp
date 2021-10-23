@@ -1,4 +1,4 @@
-export default [
+const mockChallengeNodes = [
   {
     fields: {
       slug: '/super-block-one/block-a/challenge-one',
@@ -7,9 +7,8 @@ export default [
     id: 'a',
     block: 'block-a',
     title: 'Challenge One',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block One',
+    superBlock: 'super-block-one',
     dashedName: 'challenge-one'
   },
   {
@@ -20,9 +19,8 @@ export default [
     id: 'b',
     block: 'block-a',
     title: 'Challenge Two',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block One',
+    superBlock: 'super-block-one',
     dashedName: 'challenge-two'
   },
   {
@@ -33,9 +31,8 @@ export default [
     id: 'c',
     block: 'block-b',
     title: 'Challenge One',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block One',
+    superBlock: 'super-block-one',
     dashedName: 'challenge-one'
   },
   {
@@ -47,9 +44,8 @@ export default [
     id: 'd',
     block: 'block-b',
     title: 'Challenge Two',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block One',
+    superBlock: 'super-block-one',
     dashedName: 'challenge-two'
   },
   {
@@ -60,9 +56,8 @@ export default [
     id: 'e',
     block: 'block-c',
     title: 'Challenge One',
-    isRequired: false,
     isPrivate: true,
-    superBlock: 'Super Block One',
+    superBlock: 'super-block-one',
     dashedName: 'challenge-one'
   },
   {
@@ -73,9 +68,8 @@ export default [
     id: 'f',
     block: 'block-a',
     title: 'Challenge One',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block Two',
+    superBlock: 'super-block-two',
     dashedName: 'challenge-one'
   },
   {
@@ -86,9 +80,8 @@ export default [
     id: 'g',
     block: 'block-a',
     title: 'Challenge Two',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block Two',
+    superBlock: 'super-block-two',
     dashedName: 'challenge-two'
   },
   {
@@ -99,9 +92,8 @@ export default [
     id: 'h',
     block: 'block-b',
     title: 'Challenge One',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block Two',
+    superBlock: 'super-block-two',
     dashedName: 'challenge-one'
   },
   {
@@ -112,9 +104,8 @@ export default [
     id: 'i',
     block: 'block-b',
     title: 'Challenge Two',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block Two',
+    superBlock: 'super-block-two',
     dashedName: 'challenge-two'
   },
   {
@@ -125,9 +116,8 @@ export default [
     id: 'j',
     block: 'block-a',
     title: 'Challenge One',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block Three',
+    superBlock: 'super-block-three',
     dashedName: 'challenge-one'
   },
   {
@@ -138,9 +128,10 @@ export default [
     id: 'k',
     block: 'block-c',
     title: 'Challenge Two',
-    isRequired: false,
     isPrivate: false,
-    superBlock: 'Super Block Three',
+    superBlock: 'super-block-three',
     dashedName: 'challenge-two'
   }
 ];
+
+export default mockChallengeNodes;

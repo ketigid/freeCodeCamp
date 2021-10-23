@@ -1,5 +1,5 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { Form } from 'react-final-form';
 
 import {
@@ -12,14 +12,22 @@ import {
 const propTypes = {
   buttonText: PropTypes.string,
   enableSubmit: PropTypes.bool,
-  formFields: PropTypes.arrayOf(PropTypes.string).isRequired,
+  formFields: PropTypes.arrayOf(
+    PropTypes.shape({ name: PropTypes.string, label: PropTypes.string })
+      .isRequired
+  ).isRequired,
   hideButton: PropTypes.bool,
   id: PropTypes.string.isRequired,
   initialValues: PropTypes.object,
   options: PropTypes.shape({
     ignored: PropTypes.arrayOf(PropTypes.string),
+    isEditorLinkAllowed: PropTypes.bool,
     required: PropTypes.arrayOf(PropTypes.string),
-    types: PropTypes.objectOf(PropTypes.string)
+    types: PropTypes.objectOf(PropTypes.string),
+    placeholders: PropTypes.shape({
+      solution: PropTypes.string,
+      githubLink: PropTypes.string
+    })
   }),
   submit: PropTypes.func.isRequired
 };
@@ -47,7 +55,7 @@ function DynamicForm({
           onSubmit={handleSubmit}
           style={{ width: '100%' }}
         >
-          <FormFields fields={formFields} options={options} />
+          <FormFields formFields={formFields} options={options} />
           <BlockSaveWrapper>
             {hideButton ? null : (
               <BlockSaveButton disabled={(pristine && !enableSubmit) || error}>
